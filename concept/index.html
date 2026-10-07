@@ -126,9 +126,9 @@ transition: opacity 0.12s;
 
 /* ---- the copy, in one place ---- */
 var INTRO_TITLE = 'You\u2019re about to view a concept image that will disappear.';
-var INTRO_SUB   = 'Press and hold the screen to keep it visible. It hides the moment you let go, and you have 8 seconds of viewing in total.';
+var INTRO_SUB   = 'Press and hold the screen to keep it visible. It hides the moment you let go, and you have 4 seconds of viewing in total.';
 
-var BUDGET_MS = 8000;
+var BUDGET_MS = 4000;
 var PARTICIPANT = '+27 84 \u2022\u2022\u2022 2082';
 
 var screens = ['gate', 'desktop', 'intro', 'viewer', 'done'];
@@ -188,207 +188,215 @@ sizeArt();
         ctx.closePath();
     }
 
-    /* ---------- the confidential stimulus ---------- */
-
-    function wrap(text, x, y, maxW, lineH) {
-        var words = text.split(' ');
-        var line = '';
-        for (var i = 0; i < words.length; i++) {
-            var test = line ? line + ' ' + words[i] : words[i];
-            if (ctx.measureText(test).width > maxW && line) {
-                ctx.fillText(line, x, y);
-                y += lineH;
-                line = words[i];
-            } else {
-                line = test;
-            }
-        }
-        if (line) ctx.fillText(line, x, y);
-        return y + lineH;
-    }
-
-    function drawCan(cx, cy, cw, ch) {
-        var r = cw / 2;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + ch / 2 + ch * 0.02, cw * 0.56, ch * 0.045, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.22)';
-        ctx.filter = 'blur(3px)';
-        ctx.fill();
-        ctx.restore();
-
-        var body = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
-        body.addColorStop(0, '#8d1f3d');
-        body.addColorStop(0.18, '#c23358');
-        body.addColorStop(0.42, '#e14f74');
-        body.addColorStop(0.62, '#c23358');
-        body.addColorStop(1, '#781734');
-
-        ctx.save();
-        ctx.beginPath();
-        roundRect(cx - r, cy - ch / 2, cw, ch, cw * 0.17);
-        ctx.clip();
-        ctx.fillStyle = body;
-        ctx.fillRect(cx - r, cy - ch / 2, cw, ch);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        ctx.fillRect(cx - r, cy - ch * 0.06, cw, ch * 0.26);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.fillRect(cx - r + cw * 0.12, cy - ch / 2, cw * 0.07, ch);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '760 ' + (cw * 0.21) + 'px ' + fontStack();
-        ctx.fillText('KHANYA', cx, cy - ch * 0.08);
-        ctx.font = '600 ' + (cw * 0.088) + 'px ' + fontStack();
-        ctx.fillStyle = 'rgba(255,255,255,0.86)';
-        ctx.fillText('ICED ROOIBOS', cx, cy + ch * 0.03);
-        ctx.fillText('LEMON · 330ml', cx, cy + ch * 0.1);
-        ctx.restore();
-
-        ctx.beginPath();
-        ctx.ellipse(cx, cy - ch / 2, r, cw * 0.17, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#cfd4da';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(cx, cy - ch / 2, r * 0.74, cw * 0.12, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#aeb5bd';
-        ctx.fill();
-
-        ctx.textAlign = 'start';
-        ctx.textBaseline = 'top';
+    // Deterministic, so the condensation does not shimmer between frames.
+    function seeded(seed) {
+        var s = seed;
+        return function () {
+            s = (s * 1664525 + 1013904223) % 4294967296;
+            return s / 4294967296;
+        };
     }
 
     function drawStimulus() {
-        var pad = W * 0.058;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
-        ctx.textBaseline = 'top';
-        ctx.textAlign = 'start';
-
         if (userImg) {
-            var s = Math.max(W / userImg.width, H / userImg.height);
-            var dw = userImg.width * s, dh = userImg.height * s;
+            var sc = Math.max(W / userImg.width, H / userImg.height);
+            var dw = userImg.width * sc, dh = userImg.height * sc;
             ctx.drawImage(userImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
             return;
         }
 
-        ctx.fillStyle = '#0d2235';
-        ctx.font = '780 ' + (W * 0.038) + 'px ' + fontStack();
-        ctx.fillText('KHANYA', pad, H * 0.028);
+        // ---- studio backdrop ----
+        var bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
+        bg.addColorStop(0, '#1d6b5c');
+        bg.addColorStop(0.45, '#15594d');
+        bg.addColorStop(1, '#0c3b34');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
 
-        var tagW = W * 0.37;
-        ctx.beginPath();
-        roundRect(W - pad - tagW, H * 0.025, tagW, H * 0.032, H * 0.016);
-        ctx.fillStyle = '#fde8ec';
-        ctx.fill();
-        ctx.fillStyle = '#9b1c38';
-        ctx.font = '700 ' + (W * 0.023) + 'px ' + fontStack();
-        ctx.textAlign = 'center';
-        ctx.fillText('CONCEPT B · CONFIDENTIAL', W - pad - tagW / 2, H * 0.0325);
-        ctx.textAlign = 'start';
+        // pool of light behind the product
+        var glow = ctx.createRadialGradient(W * 0.5, H * 0.42, W * 0.05, W * 0.5, H * 0.46, W * 0.78);
+        glow.addColorStop(0, 'rgba(126,214,190,0.30)');
+        glow.addColorStop(0.55, 'rgba(60,150,130,0.10)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
 
-        var hy = H * 0.082, hh = H * 0.345;
+        // ---- can geometry ----
+        var cw = W * 0.40;
+        var ch = cw * 2.42;
+        var cx = W * 0.5;
+        var cy = H * 0.5 - ch * 0.04;
+        var left = cx - cw / 2, top = cy - ch / 2;
+        var rx = cw / 2, ry = cw * 0.165;
+
+        // contact shadow
         ctx.save();
         ctx.beginPath();
-        roundRect(pad, hy, W - pad * 2, hh, W * 0.035);
-        ctx.clip();
-
-        var sky = ctx.createLinearGradient(0, hy, W, hy + hh);
-        sky.addColorStop(0, '#0f5e52');
-        sky.addColorStop(0.55, '#15806a');
-        sky.addColorStop(1, '#2fa37a');
-        ctx.fillStyle = sky;
-        ctx.fillRect(pad, hy, W - pad * 2, hh);
-
-        ctx.beginPath();
-        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.46, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.09)';
+        ctx.ellipse(cx, top + ch + ry * 0.25, cw * 0.78, ry * 0.95, 0, 0, Math.PI * 2);
+        var sh = ctx.createRadialGradient(cx, top + ch + ry * 0.25, 0, cx, top + ch + ry * 0.25, cw * 0.78);
+        sh.addColorStop(0, 'rgba(3,26,22,0.62)');
+        sh.addColorStop(1, 'rgba(3,26,22,0)');
+        ctx.fillStyle = sh;
         ctx.fill();
-        ctx.beginPath();
-        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.62, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255,255,255,0.13)';
-        ctx.lineWidth = W * 0.004;
-        ctx.stroke();
-
-        drawCan(W * 0.67, hy + hh * 0.5, W * 0.16, hh * 0.78);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '780 ' + (W * 0.055) + 'px ' + fontStack();
-        ctx.fillText('Rooibos,', pad + W * 0.05, hy + hh * 0.26);
-        ctx.fillText('but cold.', pad + W * 0.05, hy + hh * 0.42);
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.font = '600 ' + (W * 0.025) + 'px ' + fontStack();
-        ctx.fillText('NO ADDED SUGAR', pad + W * 0.05, hy + hh * 0.63);
         ctx.restore();
 
-        var y = hy + hh + H * 0.035;
-
-        ctx.fillStyle = '#0d2235';
-        ctx.font = '640 ' + (W * 0.034) + 'px ' + fontStack();
-        ctx.fillText('The concept', pad, y);
-        y += H * 0.038;
-
-        ctx.fillStyle = '#4a5c6b';
-        ctx.font = '400 ' + (W * 0.031) + 'px ' + fontStack();
-        y = wrap('A chilled rooibos iced tea, brewed from 100% South African leaf, with no added sugar and a light lemon finish. Sold cold, single-serve, wherever you buy a soft drink.',
-            pad, y, W - pad * 2, H * 0.042);
-
-        y += H * 0.012;
-
-        var bullets = ['Brewed, never powdered', 'Naturally caffeine free', 'Recyclable 330ml can'];
-        bullets.forEach(function (b) {
-            ctx.beginPath();
-            ctx.arc(pad + W * 0.022, y + H * 0.015, W * 0.022, 0, Math.PI * 2);
-            ctx.fillStyle = '#d9f2e4';
-            ctx.fill();
-            ctx.strokeStyle = '#15995b';
-            ctx.lineWidth = W * 0.007;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(pad + W * 0.012, y + H * 0.015);
-            ctx.lineTo(pad + W * 0.02, y + H * 0.0225);
-            ctx.lineTo(pad + W * 0.034, y + H * 0.006);
-            ctx.stroke();
-
-            ctx.fillStyle = '#0d2235';
-            ctx.font = '500 ' + (W * 0.031) + 'px ' + fontStack();
-            ctx.fillText(b, pad + W * 0.062, y + H * 0.004);
-            y += H * 0.045;
-        });
-
-        y += H * 0.012;
-        var boxH = H * 0.098;
+        // ---- body ----
+        ctx.save();
         ctx.beginPath();
-        roundRect(pad, y, W - pad * 2, boxH, W * 0.028);
-        ctx.fillStyle = '#f3f5f8';
-        ctx.fill();
+        ctx.moveTo(left, top);
+        ctx.lineTo(left, top + ch - ry);
+        ctx.ellipse(cx, top + ch - ry, rx, ry, 0, Math.PI, 0, true);
+        ctx.lineTo(left + cw, top);
+        ctx.closePath();
+        ctx.clip();
 
-        ctx.fillStyle = '#0d2235';
-        ctx.font = '760 ' + (W * 0.05) + 'px ' + fontStack();
-        ctx.fillText('R18.99', pad + W * 0.045, y + boxH * 0.17);
-        ctx.fillStyle = '#6b7a87';
-        ctx.font = '500 ' + (W * 0.024) + 'px ' + fontStack();
-        ctx.fillText('per 330ml can', pad + W * 0.045, y + boxH * 0.66);
+        var body = ctx.createLinearGradient(left, 0, left + cw, 0);
+        body.addColorStop(0.00, '#5c0d1c');
+        body.addColorStop(0.10, '#8e1430');
+        body.addColorStop(0.26, '#d8355a');
+        body.addColorStop(0.33, '#f07d95');
+        body.addColorStop(0.40, '#c92247');
+        body.addColorStop(0.72, '#a3123a');
+        body.addColorStop(0.89, '#6d0f24');
+        body.addColorStop(1.00, '#48091a');
+        ctx.fillStyle = body;
+        ctx.fillRect(left, top, cw, ch);
 
-        var pw = W * 0.3;
-        ctx.beginPath();
-        roundRect(W - pad - pw - W * 0.035, y + boxH * 0.29, pw, boxH * 0.42, boxH * 0.21);
-        ctx.fillStyle = '#15995b';
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '700 ' + (W * 0.025) + 'px ' + fontStack();
+        // vertical sheen falloff top and bottom
+        var vv = ctx.createLinearGradient(0, top, 0, top + ch);
+        vv.addColorStop(0, 'rgba(255,255,255,0.16)');
+        vv.addColorStop(0.12, 'rgba(255,255,255,0)');
+        vv.addColorStop(0.86, 'rgba(0,0,0,0.12)');
+        vv.addColorStop(1, 'rgba(0,0,0,0.34)');
+        ctx.fillStyle = vv;
+        ctx.fillRect(left, top, cw, ch);
+
+        // ---- branding ----
         ctx.textAlign = 'center';
-        ctx.fillText('LAUNCHING APRIL', W - pad - pw / 2 - W * 0.035, y + boxH * 0.43);
-        ctx.textAlign = 'start';
+        ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = '#9aa3ab';
-        ctx.font = '500 ' + (W * 0.022) + 'px ' + fontStack();
-        ctx.fillText('Research stimulus only · not for distribution · pack design not final', pad, H - pad * 0.72);
+        ctx.fillStyle = 'rgba(255,255,255,0.97)';
+        ctx.font = '800 ' + (cw * 0.235) + 'px ' + fontStack();
+        ctx.fillText('KHANYA', cx, top + ch * 0.335);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        ctx.lineWidth = Math.max(1, cw * 0.006);
+        ctx.beginPath();
+        ctx.moveTo(cx - cw * 0.26, top + ch * 0.395);
+        ctx.lineTo(cx + cw * 0.26, top + ch * 0.395);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.font = '650 ' + (cw * 0.072) + 'px ' + fontStack();
+        ctx.fillText('ICED ROOIBOS', cx, top + ch * 0.437);
+        ctx.fillStyle = 'rgba(255,255,255,0.72)';
+        ctx.font = '500 ' + (cw * 0.060) + 'px ' + fontStack();
+        ctx.fillText('LEMON', cx, top + ch * 0.477);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '600 ' + (cw * 0.055) + 'px ' + fontStack();
+        ctx.fillText('NO ADDED SUGAR', cx, top + ch * 0.70);
+        ctx.fillStyle = 'rgba(255,255,255,0.80)';
+        ctx.font = '700 ' + (cw * 0.062) + 'px ' + fontStack();
+        ctx.fillText('330 ml', cx, top + ch * 0.765);
+
+        // ---- condensation, clipped to the body ----
+        var rnd = seeded(20260107);
+        for (var i = 0; i < 150; i++) {
+            var dx = left + rnd() * cw;
+            var dy = top + rnd() * ch;
+            var dr = cw * (0.004 + rnd() * 0.016);
+            var edge = 1 - Math.abs((dx - cx) / rx);
+            if (edge < 0.08) continue;
+
+            ctx.beginPath();
+            ctx.arc(dx, dy, dr, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (0.05 + rnd() * 0.10) + ')';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(dx - dr * 0.32, dy - dr * 0.34, dr * 0.34, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (0.30 + rnd() * 0.40) + ')';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(dx + dr * 0.26, dy + dr * 0.30, dr * 0.42, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(60,0,14,0.16)';
+            ctx.fill();
+        }
+
+        // a few runs
+        for (var j = 0; j < 7; j++) {
+            var rxp = left + cw * (0.14 + rnd() * 0.72);
+            var ryp = top + ch * (0.12 + rnd() * 0.5);
+            var rl = ch * (0.05 + rnd() * 0.14);
+            var rw = cw * 0.009;
+            var g = ctx.createLinearGradient(0, ryp, 0, ryp + rl);
+            g.addColorStop(0, 'rgba(255,255,255,0.34)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(rxp, ryp, rw, rl);
+        }
+        ctx.restore();
+
+        // ---- lid ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2);
+        var lid = ctx.createLinearGradient(left, 0, left + cw, 0);
+        lid.addColorStop(0, '#6f757a');
+        lid.addColorStop(0.22, '#d6dade');
+        lid.addColorStop(0.42, '#f4f6f7');
+        lid.addColorStop(0.62, '#aeb4b9');
+        lid.addColorStop(1, '#5d6368');
+        ctx.fillStyle = lid;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(cx, top + ry * 0.16, rx * 0.80, ry * 0.72, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(55,62,66,0.55)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(cx, top + ry * 0.20, rx * 0.70, ry * 0.60, 0, 0, Math.PI * 2);
+        var inner = ctx.createLinearGradient(left, 0, left + cw, 0);
+        inner.addColorStop(0, '#8d9398');
+        inner.addColorStop(0.45, '#cfd4d8');
+        inner.addColorStop(1, '#71777c');
+        ctx.fillStyle = inner;
+        ctx.fill();
+
+        // tab
+        ctx.beginPath();
+        ctx.ellipse(cx + rx * 0.10, top + ry * 0.18, rx * 0.26, ry * 0.26, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(90,97,102,0.85)';
+        ctx.lineWidth = Math.max(1, cw * 0.012);
+        ctx.stroke();
+        ctx.restore();
+
+        // neck shading just under the lid
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(left, top, cw, ry * 1.5);
+        ctx.clip();
+        var neck = ctx.createLinearGradient(0, top, 0, top + ry * 1.5);
+        neck.addColorStop(0, 'rgba(0,0,0,0.30)');
+        neck.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = neck;
+        ctx.fillRect(left, top, cw, ry * 1.5);
+        ctx.restore();
+
+        // ---- vignette ----
+        var vg = ctx.createRadialGradient(W * 0.5, H * 0.46, W * 0.30, W * 0.5, H * 0.5, W * 0.95);
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(0,0,0,0.42)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'alphabetic';
     }
+
 
     function drawWatermark(ts) {
         if (!watermark) return;
@@ -495,10 +503,15 @@ requestAnimationFrame(frame);
 });
 
 document.getElementById('close').addEventListener('click', function () {
-window.close();
+var btn = this;
+// WhatsApp's in-app browser ignores window.close() on a page it did not open
+// by script, so the close silently does nothing. Foregrounding WhatsApp via
+// its own URL scheme is what actually sends the user back.
+try { window.close(); } catch (e) {}
 setTimeout(function () {
-document.getElementById('close').textContent = 'Tap Done to go back';
-}, 300);
+location.href = 'whatsapp://';
+setTimeout(function () { btn.textContent = 'Tap Done, top left'; }, 1500);
+}, 120);
 });
 
 })();
