@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Confidential concept &middot; view once</title>
+<meta name="description" content="A new product concept shared only with you. Press and hold to reveal it. You can view it once.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Confidential concept">
+<meta property="og:description" content="Shared only with you. Press and hold to reveal it &mdash; you can view it once.">
+<meta property="og:image" content="https://derryk-yazi.github.io/view-once-demo/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+    :root {
+        --chrome: #3a3a3c;
+        --chrome-ink: #ffffff;
+        --chrome-dim: #b9b9bd;
+
+        --ink: #0d2235;
+        --body: #475c6b;
+        --label: #9aa3ab;
+
+        --soft: #edeff3;
+        --white: #ffffff;
+        --hair: #e3e6ec;
+
+        --green: #15995b;
+        --green-dark: #0f7d4a;
+        --grey-btn: #9ba3a3;
+
+        --warn: #d9830f;
+        --danger: #d1343a;
+
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font);
+        background: #c8ccd2;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    /* ---------- phone shell ---------- */
+
+    .phone {
+        width: 100%;
+        max-width: 393px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    @media (min-width: 440px) {
+        body { align-items: center; padding: 26px 0; background: #b9bec6; }
+        .phone {
+            min-height: 0;
+            height: 852px;
+            border-radius: 42px;
+            box-shadow: 0 26px 64px rgba(0,0,0,0.3);
+        }
+    }
+
+    /* ---------- iOS status bar ---------- */
+
+    .status {
+        background: var(--chrome);
+        color: var(--chrome-ink);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 26px 6px;
+        font-size: 15.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        flex: none;
+    }
+
+    .status-right { display: flex; align-items: center; gap: 6px; }
+
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 11px; }
+    .bars i {
+        width: 3px;
+        background: var(--chrome-ink);
+        border-radius: 1px;
+        display: block;
+    }
+    .bars i:nth-child(1) { height: 4px; }
+    .bars i:nth-child(2) { height: 6px; }
+    .bars i:nth-child(3) { height: 8.5px; }
+    .bars i:nth-child(4) { height: 11px; background: #8e8e93; }
+
+    .wifi { font-size: 13px; line-height: 1; }
+
+    .batt {
+        border: 1.4px solid var(--chrome-ink);
+        border-radius: 4px;
+        padding: 1px 3px;
+        font-size: 9.5px;
+        font-weight: 700;
+        line-height: 1.1;
+        min-width: 25px;
+        text-align: center;
+    }
+
+    /* ---------- WhatsApp browser chrome ---------- */
+
+    .wa-top {
+        background: var(--chrome);
+        color: var(--chrome-ink);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 6px 20px 15px;
+        flex: none;
+    }
+
+    .wa-done { font-size: 17px; justify-self: start; }
+
+    .wa-title { text-align: center; }
+    .wa-title b { display: block; font-size: 16.5px; font-weight: 700; }
+    .wa-title span {
+        display: block;
+        font-size: 13px;
+        color: var(--chrome-dim);
+        margin-top: 1px;
+    }
+
+    .wa-more {
+        justify-self: end;
+        width: 27px;
+        height: 27px;
+        border: 1.6px solid var(--chrome-ink);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        letter-spacing: 1px;
+        padding-left: 1px;
+    }
+
+    /* ---------- page ---------- */
+
+    .page {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: linear-gradient(176deg, #e9f2ea 0%, #f1f3f2 34%, #f2f2f2 100%);
+        padding: 46px 21px 34px;
+    }
+
+    h1 {
+        font-size: 32px;
+        line-height: 1.12;
+        font-weight: 760;
+        letter-spacing: -0.028em;
+        color: var(--ink);
+        margin: 0 0 18px;
+    }
+
+    .lede {
+        font-size: 17px;
+        line-height: 1.47;
+        color: var(--body);
+        margin: 0 0 22px;
+    }
+
+    .info {
+        background: var(--soft);
+        border-radius: 13px;
+        padding: 14px 16px;
+        font-size: 16px;
+        line-height: 1.42;
+        color: var(--ink);
+        margin-bottom: 11px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .info em { font-style: normal; flex: none; }
+
+    .eyebrow {
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--label);
+        margin: 26px 0 9px;
+    }
+
+    /* ---------- the protected stimulus ---------- */
+
+    .stim {
+        background: var(--white);
+        border-radius: 17px;
+        overflow: hidden;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 2px rgba(13,34,53,0.07);
+    }
+
+    .stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        display: block;
+        cursor: grab;
+        background: #f4f5f8;
+    }
+
+    .stage.is-held { cursor: grabbing; }
+    .stage.is-burned { cursor: not-allowed; }
+
+    canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+
+    .stim-bar {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 13px 16px;
+        border-top: 1px solid var(--hair);
+    }
+
+    .stim-bar span {
+        font-size: 14px;
+        color: var(--body);
+        flex: none;
+    }
+
+    .meter {
+        flex: 1;
+        height: 5px;
+        border-radius: 999px;
+        background: #e3e6ec;
+        overflow: hidden;
+    }
+
+    .meter-fill {
+        height: 100%;
+        width: 100%;
+        border-radius: 999px;
+        background: var(--green);
+    }
+
+    .meter-fill.low { background: var(--warn); }
+    .meter-fill.out { background: var(--danger); }
+
+    .remain {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        min-width: 50px;
+        text-align: right;
+        flex: none;
+    }
+
+    /* ---------- name row + CTA, mirroring the join screen ---------- */
+
+    .row {
+        background: var(--white);
+        border-radius: 17px;
+        padding: 18px 19px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 26px;
+        box-shadow: 0 1px 2px rgba(13,34,53,0.07);
+    }
+
+    .row b { font-size: 17px; font-weight: 700; color: var(--ink); }
+
+    .row button {
+        font-family: inherit;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--green);
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        flex: none;
+    }
+
+    .cta {
+        display: block;
+        width: 100%;
+        font-family: inherit;
+        font-size: 17.5px;
+        font-weight: 700;
+        color: #fff;
+        background: var(--grey-btn);
+        border: 0;
+        border-radius: 999px;
+        padding: 18px 20px;
+        cursor: not-allowed;
+        margin-bottom: 26px;
+    }
+
+    .cta.ready { background: var(--green); cursor: pointer; }
+    .cta.ready:active { background: var(--green-dark); }
+
+    /* ---------- developer notes, deliberately below the design ---------- */
+
+    details {
+        border-top: 1px solid var(--hair);
+        padding-top: 16px;
+    }
+
+    summary {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--label);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: "▸ "; }
+    details[open] summary::before { content: "▾ "; }
+
+    .dev { padding-top: 14px; }
+
+    .dev h3 {
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--label);
+        font-weight: 650;
+        margin: 18px 0 8px;
+    }
+
+    .dev h3:first-child { margin-top: 0; }
+
+    .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13.5px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--hair);
+    }
+
+    .kv dt { color: var(--body); margin: 0; }
+    .kv dd {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+    }
+
+    dl { margin: 0; }
+
+    .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-family: var(--font);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .pill.live { background: #d9f2e4; color: #0f7d4a; }
+    .pill.dead { background: #fbe0e1; color: #b02a30; }
+
+    #log {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        line-height: 1.8;
+        color: var(--body);
+    }
+
+    #log li { display: flex; gap: 9px; }
+    #log time { color: var(--label); flex: none; }
+    #log .ev-hide { color: #a8690d; }
+    #log .ev-burn { color: #b02a30; }
+    #log .ev-new  { color: #0f7d4a; }
+
+    .note {
+        font-size: 13.5px;
+        line-height: 1.58;
+        color: var(--body);
+        margin: 0 0 9px;
+    }
+
+    .note strong { color: var(--ink); font-weight: 650; }
+
+    .note.cant { border-left: 2px solid var(--danger); padding-left: 11px; }
+
+    .devbtns { display: flex; gap: 8px; margin-top: 4px; }
+
+    .devbtns button {
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--body);
+        background: var(--soft);
+        border: 1px solid var(--hair);
+        border-radius: 9px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    .devbtns button[aria-pressed="true"] {
+        background: #d9f2e4;
+        border-color: #a9ddc2;
+        color: var(--green-dark);
+    }
+
+    /* ---------- bottom browser toolbar ---------- */
+
+    .wa-bottom {
+        background: var(--chrome);
+        color: var(--chrome-dim);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 15px 28px 24px;
+        font-size: 21px;
+        flex: none;
+    }
+
+    .wa-bottom span { opacity: 0.55; }
+    .wa-bottom .on { opacity: 1; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+    <div class="status">
+        <span>09:54</span>
+        <span class="status-right">
+            <span class="bars"><i></i><i></i><i></i><i></i></span>
+            <span class="wifi">&#9680;</span>
+            <span class="batt">95</span>
+        </span>
+    </div>
+
+    <div class="wa-top">
+        <span class="wa-done">Done</span>
+        <span class="wa-title">
+            <b>WhatsApp</b>
+            <span>&#9432; forms.askyazi.co</span>
+        </span>
+        <span class="wa-more">&#8943;</span>
+    </div>
+
+    <div class="page">
+
+        <h1>Confidential concept</h1>
+
+        <p class="lede">You&rsquo;re about to view a new product concept that was shared only with you.</p>
+
+        <div class="info"><em>&#128065;&#65039;</em><span>You can view this <b>once</b>. Press and hold the panel to reveal it.</span></div>
+        <div class="info"><em>&#128274;</em><span>Your name and the time appear on the concept while you view it.</span></div>
+
+        <p class="eyebrow">Concept B &middot; Khanya Iced Rooibos</p>
+
+        <div class="stim">
+            <div class="stage" id="stage" role="img"
+                 aria-label="Confidential pricing concept. Press and hold to reveal.">
+                <canvas id="cv"></canvas>
+            </div>
+            <div class="stim-bar">
+                <span>Viewing time left</span>
+                <div class="meter"><div class="meter-fill" id="fill"></div></div>
+                <span class="remain" id="remain">8.0s</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <b id="rowLabel">Not yet viewed</b>
+            <button id="reset">New token</button>
+        </div>
+
+        <button class="cta" id="cta" disabled>Continue to question</button>
+
+        <details>
+            <summary>Prototype notes</summary>
+            <div class="dev">
+
+                <h3>Token state &mdash; server-held</h3>
+                <dl>
+                    <div class="kv"><dt>Participant</dt><dd id="pid">&mdash;</dd></div>
+                    <div class="kv"><dt>Token</dt><dd id="tok">&mdash;</dd></div>
+                    <div class="kv"><dt>Budget</dt><dd id="bud">&mdash;</dd></div>
+                    <div class="kv"><dt>Status</dt><dd id="stat">&mdash;</dd></div>
+                </dl>
+                <p class="note" style="margin-top:10px">In the real build this lives in the API. Here it is in <code>sessionStorage</code> so a refresh behaves the way the server would &mdash; the budget does not come back.</p>
+                <div class="devbtns">
+                    <button id="mark" aria-pressed="true">Watermark</button>
+                    <button id="pick">Use a real concept image</button>
+                    <button id="clearImg" hidden>Back to the mock</button>
+                </div>
+                <input type="file" id="file" accept="image/*" hidden>
+                <p class="note" style="margin-top:9px">The image stays in your browser &mdash; it is drawn straight to the canvas and never uploaded. Load a real client concept to see how the watermark sits on it.</p>
+
+                <h3>Detected events</h3>
+                <ul id="log"></ul>
+
+                <h3>Because it runs inside WhatsApp</h3>
+                <p class="note"><strong>Client state cannot be trusted.</strong> The in-app browser is ephemeral &mdash; storage can be empty on the next open, iOS especially. The budget has to be server-held. That is not an optimisation, it is the only version that works here.</p>
+                <p class="note"><strong>The page can leave the webview.</strong> The &#8943; menu always offers &ldquo;open in Safari / Chrome&rdquo;, so nothing can depend on being inside WhatsApp.</p>
+                <p class="note"><strong>Backgrounding detection is best-effort.</strong> <code>visibilitychange</code> and <code>blur</code> fire on tab switches, but in-app webviews are inconsistent about the share sheet and app switcher.</p>
+                <p class="note"><strong>Bind the token to the msisdn.</strong> The link arrives in a known chat, so a forwarded link can be made to fail outright. That is the leak we can genuinely stop.</p>
+
+                <h3>What this does and does not do</h3>
+                <p class="note"><strong>Enforced.</strong> The budget and the burn. Once spent the asset is not fetchable again &mdash; reload, forward or second device all get the spent state.</p>
+                <p class="note"><strong>Friction.</strong> Hold-to-reveal. A screenshot needs Side&nbsp;+&nbsp;Volume on iOS or Power&nbsp;+&nbsp;Volume&nbsp;Down on Android, and lifting the finger hides it. Palm-swipe, three-finger-down and Back&nbsp;Tap still get through.</p>
+                <p class="note"><strong>Damage limit.</strong> The watermark carries the participant and timestamp into every frame, so a leak identifies its source.</p>
+                <p class="note cant"><strong>Not possible.</strong> Blocking or detecting a screenshot or a screen recording. No web API exposes either, on any platform. A second phone pointed at the screen beats all of it &mdash; as it beats WhatsApp&rsquo;s own view-once.</p>
+
+            </div>
+        </details>
+
+    </div>
+
+    <div class="wa-bottom">
+        <span>&#8249;</span>
+        <span>&#8250;</span>
+        <span class="on">&#8679;</span>
+        <span class="on">&#8635;</span>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var BUDGET_MS = 8000;
+    var PARTICIPANT = '+27 82 •••• 4471';
+    var STORE = 'vo-proto-state';
+
+    var stage = document.getElementById('stage');
+    var cv = document.getElementById('cv');
+    var ctx = cv.getContext('2d');
+    var fill = document.getElementById('fill');
+    var remainEl = document.getElementById('remain');
+    var rowLabel = document.getElementById('rowLabel');
+    var cta = document.getElementById('cta');
+    var logEl = document.getElementById('log');
+    var markBtn = document.getElementById('mark');
+    var resetBtn = document.getElementById('reset');
+
+    var state = load();
+    var held = false;
+    var watermark = true;
+    var userImg = null;
+    var last = 0;
+    var events = [];
+    var dpr = 1;
+    var W = 0, H = 0;
+
+    function load() {
+        try {
+            var raw = sessionStorage.getItem(STORE);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return fresh();
+    }
+
+    function fresh() {
+        return {
+            remaining: BUDGET_MS,
+            burned: false,
+            opened: false,
+            token: 'vo_' + Math.random().toString(36).slice(2, 10)
+        };
+    }
+
+    function save() {
+        try { sessionStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function log(msg, kind) {
+        var d = new Date();
+        events.unshift({
+            t: String(d.getHours()).padStart(2, '0') + ':' +
+               String(d.getMinutes()).padStart(2, '0') + ':' +
+               String(d.getSeconds()).padStart(2, '0'),
+            msg: msg,
+            kind: kind || ''
+        });
+        if (events.length > 8) events.pop();
+        renderLog();
+    }
+
+    function renderLog() {
+        logEl.innerHTML = '';
+        events.forEach(function (e) {
+            var li = document.createElement('li');
+            if (e.kind) li.className = 'ev-' + e.kind;
+            var t = document.createElement('time');
+            t.textContent = e.t;
+            var s = document.createElement('span');
+            s.textContent = e.msg;
+            li.appendChild(t);
+            li.appendChild(s);
+            logEl.appendChild(li);
+        });
+    }
+
+    /* ---------- sizing ---------- */
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        var r = stage.getBoundingClientRect();
+        W = Math.max(1, Math.round(r.width));
+        H = Math.max(1, Math.round(r.height));
+        cv.width = Math.round(W * dpr);
+        cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function fontStack() {
+        return '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    }
+
+    function roundRect(x, y, w, h, r) {
+        r = Math.min(r, w / 2, h / 2);
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    /* ---------- the confidential stimulus ---------- */
+
+    function wrap(text, x, y, maxW, lineH) {
+        var words = text.split(' ');
+        var line = '';
+        for (var i = 0; i < words.length; i++) {
+            var test = line ? line + ' ' + words[i] : words[i];
+            if (ctx.measureText(test).width > maxW && line) {
+                ctx.fillText(line, x, y);
+                y += lineH;
+                line = words[i];
+            } else {
+                line = test;
+            }
+        }
+        if (line) ctx.fillText(line, x, y);
+        return y + lineH;
+    }
+
+    function drawCan(cx, cy, cw, ch) {
+        var r = cw / 2;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + ch / 2 + ch * 0.02, cw * 0.56, ch * 0.045, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.filter = 'blur(3px)';
+        ctx.fill();
+        ctx.restore();
+
+        var body = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
+        body.addColorStop(0, '#8d1f3d');
+        body.addColorStop(0.18, '#c23358');
+        body.addColorStop(0.42, '#e14f74');
+        body.addColorStop(0.62, '#c23358');
+        body.addColorStop(1, '#781734');
+
+        ctx.save();
+        ctx.beginPath();
+        roundRect(cx - r, cy - ch / 2, cw, ch, cw * 0.17);
+        ctx.clip();
+        ctx.fillStyle = body;
+        ctx.fillRect(cx - r, cy - ch / 2, cw, ch);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(cx - r, cy - ch * 0.06, cw, ch * 0.26);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillRect(cx - r + cw * 0.12, cy - ch / 2, cw * 0.07, ch);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '760 ' + (cw * 0.21) + 'px ' + fontStack();
+        ctx.fillText('KHANYA', cx, cy - ch * 0.08);
+        ctx.font = '600 ' + (cw * 0.088) + 'px ' + fontStack();
+        ctx.fillStyle = 'rgba(255,255,255,0.86)';
+        ctx.fillText('ICED ROOIBOS', cx, cy + ch * 0.03);
+        ctx.fillText('LEMON · 330ml', cx, cy + ch * 0.1);
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - ch / 2, r, cw * 0.17, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#cfd4da';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - ch / 2, r * 0.74, cw * 0.12, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#aeb5bd';
+        ctx.fill();
+
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'top';
+    }
+
+    function drawStimulus() {
+        var pad = W * 0.058;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'start';
+
+        if (userImg) {
+            var s = Math.max(W / userImg.width, H / userImg.height);
+            var dw = userImg.width * s, dh = userImg.height * s;
+            ctx.drawImage(userImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+            return;
+        }
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '780 ' + (W * 0.038) + 'px ' + fontStack();
+        ctx.fillText('KHANYA', pad, H * 0.028);
+
+        var tagW = W * 0.37;
+        ctx.beginPath();
+        roundRect(W - pad - tagW, H * 0.025, tagW, H * 0.032, H * 0.016);
+        ctx.fillStyle = '#fde8ec';
+        ctx.fill();
+        ctx.fillStyle = '#9b1c38';
+        ctx.font = '700 ' + (W * 0.023) + 'px ' + fontStack();
+        ctx.textAlign = 'center';
+        ctx.fillText('CONCEPT B · CONFIDENTIAL', W - pad - tagW / 2, H * 0.0325);
+        ctx.textAlign = 'start';
+
+        var hy = H * 0.082, hh = H * 0.345;
+        ctx.save();
+        ctx.beginPath();
+        roundRect(pad, hy, W - pad * 2, hh, W * 0.035);
+        ctx.clip();
+
+        var sky = ctx.createLinearGradient(0, hy, W, hy + hh);
+        sky.addColorStop(0, '#0f5e52');
+        sky.addColorStop(0.55, '#15806a');
+        sky.addColorStop(1, '#2fa37a');
+        ctx.fillStyle = sky;
+        ctx.fillRect(pad, hy, W - pad * 2, hh);
+
+        ctx.beginPath();
+        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.46, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.09)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.62, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+        ctx.lineWidth = W * 0.004;
+        ctx.stroke();
+
+        drawCan(W * 0.67, hy + hh * 0.5, W * 0.16, hh * 0.78);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '780 ' + (W * 0.055) + 'px ' + fontStack();
+        ctx.fillText('Rooibos,', pad + W * 0.05, hy + hh * 0.26);
+        ctx.fillText('but cold.', pad + W * 0.05, hy + hh * 0.42);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '600 ' + (W * 0.025) + 'px ' + fontStack();
+        ctx.fillText('NO ADDED SUGAR', pad + W * 0.05, hy + hh * 0.63);
+        ctx.restore();
+
+        var y = hy + hh + H * 0.035;
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '640 ' + (W * 0.034) + 'px ' + fontStack();
+        ctx.fillText('The concept', pad, y);
+        y += H * 0.038;
+
+        ctx.fillStyle = '#4a5c6b';
+        ctx.font = '400 ' + (W * 0.031) + 'px ' + fontStack();
+        y = wrap('A chilled rooibos iced tea, brewed from 100% South African leaf, with no added sugar and a light lemon finish. Sold cold, single-serve, wherever you buy a soft drink.',
+            pad, y, W - pad * 2, H * 0.042);
+
+        y += H * 0.012;
+
+        var bullets = ['Brewed, never powdered', 'Naturally caffeine free', 'Recyclable 330ml can'];
+        bullets.forEach(function (b) {
+            ctx.beginPath();
+            ctx.arc(pad + W * 0.022, y + H * 0.015, W * 0.022, 0, Math.PI * 2);
+            ctx.fillStyle = '#d9f2e4';
+            ctx.fill();
+            ctx.strokeStyle = '#15995b';
+            ctx.lineWidth = W * 0.007;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(pad + W * 0.012, y + H * 0.015);
+            ctx.lineTo(pad + W * 0.02, y + H * 0.0225);
+            ctx.lineTo(pad + W * 0.034, y + H * 0.006);
+            ctx.stroke();
+
+            ctx.fillStyle = '#0d2235';
+            ctx.font = '500 ' + (W * 0.031) + 'px ' + fontStack();
+            ctx.fillText(b, pad + W * 0.062, y + H * 0.004);
+            y += H * 0.045;
+        });
+
+        y += H * 0.012;
+        var boxH = H * 0.098;
+        ctx.beginPath();
+        roundRect(pad, y, W - pad * 2, boxH, W * 0.028);
+        ctx.fillStyle = '#f3f5f8';
+        ctx.fill();
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '760 ' + (W * 0.05) + 'px ' + fontStack();
+        ctx.fillText('R18.99', pad + W * 0.045, y + boxH * 0.17);
+        ctx.fillStyle = '#6b7a87';
+        ctx.font = '500 ' + (W * 0.024) + 'px ' + fontStack();
+        ctx.fillText('per 330ml can', pad + W * 0.045, y + boxH * 0.66);
+
+        var pw = W * 0.3;
+        ctx.beginPath();
+        roundRect(W - pad - pw - W * 0.035, y + boxH * 0.29, pw, boxH * 0.42, boxH * 0.21);
+        ctx.fillStyle = '#15995b';
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 ' + (W * 0.025) + 'px ' + fontStack();
+        ctx.textAlign = 'center';
+        ctx.fillText('LAUNCHING APRIL', W - pad - pw / 2 - W * 0.035, y + boxH * 0.43);
+        ctx.textAlign = 'start';
+
+        ctx.fillStyle = '#9aa3ab';
+        ctx.font = '500 ' + (W * 0.022) + 'px ' + fontStack();
+        ctx.fillText('Research stimulus only · not for distribution · pack design not final', pad, H - pad * 0.72);
+    }
+
+    /* ---------- watermark ---------- */
+
+    function drawWatermark(ts) {
+        if (!watermark) return;
+        var d = new Date();
+        var label = PARTICIPANT + '  ·  ' +
+            String(d.getHours()).padStart(2, '0') + ':' +
+            String(d.getMinutes()).padStart(2, '0') + ':' +
+            String(d.getSeconds()).padStart(2, '0');
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = 'rgba(40,46,70,0.15)';
+        ctx.font = '600 ' + (W * 0.03) + 'px ' + fontStack();
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'start';
+
+        var drift = (ts / 60) % 180;
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate(-24 * Math.PI / 180);
+        ctx.translate(-W, -H);
+
+        var stepY = H * 0.2;
+        var stepX = ctx.measureText(label).width + W * 0.22;
+        for (var y = 0; y < H * 2.2; y += stepY) {
+            var offset = ((y / stepY) % 2) * (stepX / 2) - drift;
+            for (var x = offset; x < W * 2.4; x += stepX) {
+                ctx.fillText(label, x, y);
+            }
+        }
+        ctx.restore();
+    }
+
+    /* ---------- hidden states ---------- */
+
+    function drawLocked() {
+        ctx.fillStyle = '#f4f5f8';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = 'rgba(13,34,53,0.035)';
+        ctx.lineWidth = 1;
+        for (var i = -H; i < W; i += 12) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i + H, H);
+            ctx.stroke();
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#5c6b79';
+        ctx.font = '650 ' + (W * 0.042) + 'px ' + fontStack();
+        ctx.fillText('Press and hold to reveal', W / 2, H / 2 - W * 0.024);
+        ctx.fillStyle = '#95a0ab';
+        ctx.font = '500 ' + (W * 0.032) + 'px ' + fontStack();
+        ctx.fillText('One view only', W / 2, H / 2 + W * 0.036);
+        ctx.textAlign = 'start';
+    }
+
+    function drawBurned() {
+        ctx.fillStyle = '#f7f1f1';
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#b02a30';
+        ctx.font = '700 ' + (W * 0.044) + 'px ' + fontStack();
+        ctx.fillText('One-time view used', W / 2, H / 2 - W * 0.026);
+        ctx.fillStyle = '#9b7074';
+        ctx.font = '500 ' + (W * 0.031) + 'px ' + fontStack();
+        ctx.fillText('This cannot be shown again', W / 2, H / 2 + W * 0.034);
+        ctx.textAlign = 'start';
+    }
+
+    /* ---------- paint ---------- */
+
+    function paint(ts) {
+        ctx.clearRect(0, 0, W, H);
+        if (state.burned) { drawBurned(); return; }
+        if (!held) { drawLocked(); return; }
+        drawStimulus();
+        drawWatermark(ts);
+    }
+
+    /* ---------- loop ---------- */
+
+    function frame(ts) {
+        if (!last) last = ts;
+        var dt = Math.min(ts - last, 120);
+        last = ts;
+
+        if (held && !state.burned) {
+            state.remaining -= dt;
+            if (state.remaining <= 0) {
+                state.remaining = 0;
+                state.burned = true;
+                held = false;
+                stage.classList.remove('is-held');
+                stage.classList.add('is-burned');
+                save();
+                log('budget spent — token burned', 'burn');
+            }
+        }
+
+        paint(ts);
+        render();
+        requestAnimationFrame(frame);
+    }
+
+    function render() {
+        var pct = state.remaining / BUDGET_MS;
+        fill.style.width = (pct * 100).toFixed(1) + '%';
+        fill.className = 'meter-fill' + (state.burned ? ' out' : pct < 0.34 ? ' low' : '');
+        remainEl.textContent = state.burned ? 'spent' : (state.remaining / 1000).toFixed(1) + 's';
+
+        rowLabel.textContent = state.burned ? 'Viewed — no longer available'
+            : state.opened ? 'Viewed' : 'Not yet viewed';
+
+        var ready = state.opened || state.burned;
+        cta.disabled = !ready;
+        cta.className = 'cta' + (ready ? ' ready' : '');
+
+        document.getElementById('pid').textContent = PARTICIPANT;
+        document.getElementById('tok').textContent = state.token;
+        document.getElementById('bud').textContent =
+            (state.remaining / 1000).toFixed(1) + 's / ' + (BUDGET_MS / 1000) + 's';
+
+        var st = document.getElementById('stat');
+        if (st.firstChild && st.dataset.v === String(state.burned)) return;
+        st.dataset.v = String(state.burned);
+        st.innerHTML = '';
+        var pill = document.createElement('span');
+        pill.className = 'pill ' + (state.burned ? 'dead' : 'live');
+        pill.textContent = state.burned ? 'BURNED' : 'VALID';
+        st.appendChild(pill);
+    }
+
+    /* ---------- interaction ---------- */
+
+    stage.addEventListener('pointerdown', function (e) {
+        if (state.burned) { log('reveal refused — token burned', 'burn'); return; }
+        e.preventDefault();
+        held = true;
+        stage.classList.add('is-held');
+        try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+        if (!state.opened) {
+            state.opened = true;
+            save();
+            log('first reveal — clock started', 'new');
+        } else {
+            log('reveal');
+        }
+    });
+
+    function release(reason) {
+        if (!held) return;
+        held = false;
+        stage.classList.remove('is-held');
+        save();
+        log(reason, 'hide');
+    }
+
+    stage.addEventListener('pointerup', function () { release('released — hidden'); });
+    stage.addEventListener('pointercancel', function () { release('cancelled — hidden'); });
+    stage.addEventListener('lostpointercapture', function () { release('pointer lost — hidden'); });
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) release('tab hidden — hidden and logged');
+    });
+    window.addEventListener('blur', function () { release('window blurred — hidden and logged'); });
+    window.addEventListener('pagehide', function () { release('page hidden — hidden and logged'); });
+
+    stage.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    stage.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    markBtn.addEventListener('click', function () {
+        watermark = !watermark;
+        markBtn.setAttribute('aria-pressed', String(watermark));
+        log('watermark ' + (watermark ? 'on' : 'off'));
+    });
+
+    var fileInput = document.getElementById('file');
+    var clearImgBtn = document.getElementById('clearImg');
+
+    document.getElementById('pick').addEventListener('click', function () { fileInput.click(); });
+
+    fileInput.addEventListener('change', function () {
+        var f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        var url = URL.createObjectURL(f);
+        var img = new Image();
+        img.onload = function () {
+            if (userImg && userImg.src.indexOf('blob:') === 0) URL.revokeObjectURL(userImg.src);
+            userImg = img;
+            clearImgBtn.hidden = false;
+            log('concept image loaded locally', 'new');
+        };
+        img.src = url;
+    });
+
+    clearImgBtn.addEventListener('click', function () {
+        if (userImg && userImg.src.indexOf('blob:') === 0) URL.revokeObjectURL(userImg.src);
+        userImg = null;
+        clearImgBtn.hidden = true;
+        fileInput.value = '';
+        log('back to the mock concept');
+    });
+
+    resetBtn.addEventListener('click', function () {
+        state = fresh();
+        save();
+        held = false;
+        stage.classList.remove('is-burned', 'is-held');
+        log('new token issued', 'new');
+    });
+
+    cta.addEventListener('click', function () {
+        if (!cta.disabled) log('continued to question');
+    });
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', function () { setTimeout(resize, 220); });
+
+    resize();
+    if (state.burned) stage.classList.add('is-burned');
+    log(state.burned ? 'token already burned' : 'token valid', state.burned ? 'burn' : 'new');
+    requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
