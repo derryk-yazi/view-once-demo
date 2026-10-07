@@ -126,9 +126,9 @@ transition: opacity 0.12s;
 
 /* ---- the copy, in one place ---- */
 var INTRO_TITLE = 'You\u2019re about to view a concept image that will disappear.';
-var INTRO_SUB   = 'Press and hold the screen to keep it visible. It hides the moment you let go, and you have 4 seconds of viewing in total.';
+var INTRO_SUB   = 'Press and hold the screen to keep it visible. It hides the moment you let go, and you have 3 seconds of viewing in total.';
 
-var BUDGET_MS = 4000;
+var BUDGET_MS = 3000;
 var PARTICIPANT = '+27 84 \u2022\u2022\u2022 2082';
 
 var screens = ['gate', 'desktop', 'intro', 'viewer', 'done'];
@@ -503,15 +503,14 @@ requestAnimationFrame(frame);
 });
 
 document.getElementById('close').addEventListener('click', function () {
-var btn = this;
-// WhatsApp's in-app browser ignores window.close() on a page it did not open
-// by script, so the close silently does nothing. Foregrounding WhatsApp via
-// its own URL scheme is what actually sends the user back.
-try { window.close(); } catch (e) {}
-setTimeout(function () {
+// There is no web API that closes WhatsApp's in-app browser. Two best-effort
+// attempts, and they MUST run synchronously inside the click: iOS only honours
+// a custom-scheme handoff while a user gesture is still active, which is why
+// doing this from a setTimeout did nothing at all.
+try { window.open('', '_self'); window.close(); } catch (e) {}
+// Foregrounding WhatsApp itself is the one that usually sticks: the webview
+// goes to the background exactly as if Done had been tapped.
 location.href = 'whatsapp://';
-setTimeout(function () { btn.textContent = 'Tap Done, top left'; }, 1500);
-}, 120);
 });
 
 })();
