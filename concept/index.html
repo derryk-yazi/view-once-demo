@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Concept</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root {
+--ink: #0d2235;
+--body: #475c6b;
+--green: #15995b;
+--font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+margin: 0; padding: 0; height: 100%;
+font-family: var(--font);
+background: #0d2235;
+overflow: hidden;
+-webkit-font-smoothing: antialiased;
+}
+.screen {
+position: fixed; inset: 0;
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 30px 26px calc(30px + env(safe-area-inset-bottom));
+text-align: center;
+}
+.screen.on { display: flex; }
+
+/* intro + end share this plain card look */
+#intro, #desktop, #done { background: #ffffff; }
+h1 {
+font-size: 25px; line-height: 1.22; font-weight: 740;
+letter-spacing: -0.025em; color: var(--ink);
+margin: 0 0 16px; max-width: 19em;
+}
+p.sub {
+font-size: 16.5px; line-height: 1.5; color: var(--body);
+margin: 0 0 32px; max-width: 21em;
+}
+button.cta {
+appearance: none; border: 0; cursor: pointer;
+background: var(--green); color: #fff;
+font-family: var(--font); font-size: 17px; font-weight: 650;
+letter-spacing: -0.01em;
+padding: 16px 30px; border-radius: 14px;
+min-width: 210px;
+}
+button.cta:active { background: #0f7d4a; }
+
+/* viewer */
+#viewer { background: #05080c; padding: 0; }
+#cv {
+position: absolute; inset: 0;
+width: 100%; height: 100%;
+display: block;
+touch-action: none; user-select: none;
+-webkit-user-select: none; -webkit-touch-callout: none;
+}
+#hint {
+position: absolute; left: 0; right: 0; bottom: 0;
+padding: 22px 26px calc(26px + env(safe-area-inset-bottom));
+color: #fff; font-size: 16px; font-weight: 600;
+letter-spacing: -0.01em;
+text-shadow: 0 1px 10px rgba(0,0,0,0.55);
+pointer-events: none;
+background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
+transition: opacity 0.18s;
+}
+#viewer.held #hint { opacity: 0; }
+#bar {
+position: absolute; left: 0; top: 0; height: 3px;
+width: 100%; background: var(--green);
+transform-origin: 0 50%;
+pointer-events: none;
+}
+.lock {
+position: absolute; inset: 0;
+display: flex; align-items: center; justify-content: center;
+flex-direction: column; gap: 10px;
+background: #11161c;
+color: #8795a3; font-size: 17px; font-weight: 650;
+letter-spacing: -0.01em;
+pointer-events: none;
+transition: opacity 0.12s;
+}
+#viewer.held .lock { opacity: 0; }
+.lock small { font-size: 14px; font-weight: 500; color: #5d6b78; }
+</style>
+</head>
+<body>
+
+<div class="screen on" id="gate"></div>
+
+<div class="screen" id="desktop">
+<h1>Open this on your phone</h1>
+<p class="sub">This concept can only be viewed on a mobile device. Open the message on your phone and tap the button again.</p>
+</div>
+
+<div class="screen" id="intro">
+<h1 id="introTitle"></h1>
+<p class="sub" id="introSub"></p>
+<button class="cta" id="start">View the concept</button>
+</div>
+
+<div class="screen" id="viewer">
+<canvas id="cv"></canvas>
+<div class="lock" id="lock">Press and hold to reveal<small>One view only</small></div>
+<div id="bar"></div>
+<div id="hint">Keep holding &mdash; it hides the moment you let go</div>
+</div>
+
+<div class="screen" id="done">
+<h1>That concept is gone</h1>
+<p class="sub">Thanks &mdash; your viewing time is used up.</p>
+<button class="cta" id="close">Close</button>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---- the copy, in one place ---- */
+var INTRO_TITLE = 'You\u2019re about to view a concept image that will disappear.';
+var INTRO_SUB   = 'Press and hold the screen to keep it visible. It hides the moment you let go, and you have 8 seconds of viewing in total.';
+
+var BUDGET_MS = 8000;
+var PARTICIPANT = '+27 84 \u2022\u2022\u2022 2082';
+
+var screens = ['gate', 'desktop', 'intro', 'viewer', 'done'];
+function show(id) {
+screens.forEach(function (s) {
+document.getElementById(s).classList.toggle('on', s === id);
+});
+}
+
+/* ---- mobile gate: no image at all on desktop ---- */
+var isMobile = (function () {
+if (/Android|iPhone|iPod|Windows Phone/i.test(navigator.userAgent)) return true;
+if (/iPad/i.test(navigator.userAgent)) return true;
+if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+return !!(coarse && navigator.maxTouchPoints > 0);
+})();
+
+document.getElementById('introTitle').textContent = INTRO_TITLE;
+document.getElementById('introSub').textContent = INTRO_SUB;
+
+if (!isMobile) { show('desktop'); return; }
+show('intro');
+
+/* ---- canvases ---- */
+var AW = 1080, AH = 1350;
+var art = document.createElement('canvas');
+art.width = AW; art.height = AH;
+var actx = art.getContext('2d');
+
+var cv = document.getElementById('cv');
+var sctx = cv.getContext('2d');
+var viewer = document.getElementById('viewer');
+var bar = document.getElementById('bar');
+
+var ctx = actx, W = AW, H = AH, userImg = null;
+
+    function fontStack() {
+        return '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    }
+
+    function roundRect(x, y, w, h, r) {
+        r = Math.min(r, w / 2, h / 2);
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    /* ---------- the confidential stimulus ---------- */
+    function drawStimulus() {
+        var pad = W * 0.058;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'start';
+
+        if (userImg) {
+            var s = Math.max(W / userImg.width, H / userImg.height);
+            var dw = userImg.width * s, dh = userImg.height * s;
+            ctx.drawImage(userImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+            return;
+        }
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '780 ' + (W * 0.038) + 'px ' + fontStack();
+        ctx.fillText('KHANYA', pad, H * 0.028);
+
+        var tagW = W * 0.37;
+        ctx.beginPath();
+        roundRect(W - pad - tagW, H * 0.025, tagW, H * 0.032, H * 0.016);
+        ctx.fillStyle = '#fde8ec';
+        ctx.fill();
+        ctx.fillStyle = '#9b1c38';
+        ctx.font = '700 ' + (W * 0.023) + 'px ' + fontStack();
+        ctx.textAlign = 'center';
+        ctx.fillText('CONCEPT B · CONFIDENTIAL', W - pad - tagW / 2, H * 0.0325);
+        ctx.textAlign = 'start';
+
+        var hy = H * 0.082, hh = H * 0.345;
+        ctx.save();
+        ctx.beginPath();
+        roundRect(pad, hy, W - pad * 2, hh, W * 0.035);
+        ctx.clip();
+
+        var sky = ctx.createLinearGradient(0, hy, W, hy + hh);
+        sky.addColorStop(0, '#0f5e52');
+        sky.addColorStop(0.55, '#15806a');
+        sky.addColorStop(1, '#2fa37a');
+        ctx.fillStyle = sky;
+        ctx.fillRect(pad, hy, W - pad * 2, hh);
+
+        ctx.beginPath();
+        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.46, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.09)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(W * 0.66, hy + hh * 0.5, hh * 0.62, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+        ctx.lineWidth = W * 0.004;
+        ctx.stroke();
+
+        drawCan(W * 0.67, hy + hh * 0.5, W * 0.16, hh * 0.78);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '780 ' + (W * 0.055) + 'px ' + fontStack();
+        ctx.fillText('Rooibos,', pad + W * 0.05, hy + hh * 0.26);
+        ctx.fillText('but cold.', pad + W * 0.05, hy + hh * 0.42);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '600 ' + (W * 0.025) + 'px ' + fontStack();
+        ctx.fillText('NO ADDED SUGAR', pad + W * 0.05, hy + hh * 0.63);
+        ctx.restore();
+
+        var y = hy + hh + H * 0.035;
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '640 ' + (W * 0.034) + 'px ' + fontStack();
+        ctx.fillText('The concept', pad, y);
+        y += H * 0.038;
+
+        ctx.fillStyle = '#4a5c6b';
+        ctx.font = '400 ' + (W * 0.031) + 'px ' + fontStack();
+        y = wrap('A chilled rooibos iced tea, brewed from 100% South African leaf, with no added sugar and a light lemon finish. Sold cold, single-serve, wherever you buy a soft drink.',
+            pad, y, W - pad * 2, H * 0.042);
+
+        y += H * 0.012;
+
+        var bullets = ['Brewed, never powdered', 'Naturally caffeine free', 'Recyclable 330ml can'];
+        bullets.forEach(function (b) {
+            ctx.beginPath();
+            ctx.arc(pad + W * 0.022, y + H * 0.015, W * 0.022, 0, Math.PI * 2);
+            ctx.fillStyle = '#d9f2e4';
+            ctx.fill();
+            ctx.strokeStyle = '#15995b';
+            ctx.lineWidth = W * 0.007;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(pad + W * 0.012, y + H * 0.015);
+            ctx.lineTo(pad + W * 0.02, y + H * 0.0225);
+            ctx.lineTo(pad + W * 0.034, y + H * 0.006);
+            ctx.stroke();
+
+            ctx.fillStyle = '#0d2235';
+            ctx.font = '500 ' + (W * 0.031) + 'px ' + fontStack();
+            ctx.fillText(b, pad + W * 0.062, y + H * 0.004);
+            y += H * 0.045;
+        });
+
+        y += H * 0.012;
+        var boxH = H * 0.098;
+        ctx.beginPath();
+        roundRect(pad, y, W - pad * 2, boxH, W * 0.028);
+        ctx.fillStyle = '#f3f5f8';
+        ctx.fill();
+
+        ctx.fillStyle = '#0d2235';
+        ctx.font = '760 ' + (W * 0.05) + 'px ' + fontStack();
+        ctx.fillText('R18.99', pad + W * 0.045, y + boxH * 0.17);
+        ctx.fillStyle = '#6b7a87';
+        ctx.font = '500 ' + (W * 0.024) + 'px ' + fontStack();
+        ctx.fillText('per 330ml can', pad + W * 0.045, y + boxH * 0.66);
+
+        var pw = W * 0.3;
+        ctx.beginPath();
+        roundRect(W - pad - pw - W * 0.035, y + boxH * 0.29, pw, boxH * 0.42, boxH * 0.21);
+        ctx.fillStyle = '#15995b';
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 ' + (W * 0.025) + 'px ' + fontStack();
+        ctx.textAlign = 'center';
+        ctx.fillText('LAUNCHING APRIL', W - pad - pw / 2 - W * 0.035, y + boxH * 0.43);
+        ctx.textAlign = 'start';
+
+        ctx.fillStyle = '#9aa3ab';
+        ctx.font = '500 ' + (W * 0.022) + 'px ' + fontStack();
+        ctx.fillText('Research stimulus only · not for distribution · pack design not final', pad, H - pad * 0.72);
+    }
+
+
+function sizeScreen() {
+var r = Math.min(window.devicePixelRatio || 1, 2.5);
+cv.width = Math.round(window.innerWidth * r);
+cv.height = Math.round(window.innerHeight * r);
+}
+window.addEventListener('resize', sizeScreen);
+sizeScreen();
+
+function blit() {
+var s = Math.max(cv.width / AW, cv.height / AH);
+var dw = AW * s, dh = AH * s;
+sctx.clearRect(0, 0, cv.width, cv.height);
+sctx.drawImage(art, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
+}
+
+/* ---- state (in memory only: reopening the link gives a fresh view) ---- */
+var held = false, remaining = BUDGET_MS, last = 0, spent = false;
+
+function frame(ts) {
+if (spent) return;
+if (!last) last = ts;
+var dt = ts - last; last = ts;
+if (held) {
+remaining = Math.max(0, remaining - dt);
+drawStimulus();
+drawWatermark(ts);
+blit();
+if (remaining === 0) { burn(); return; }
+}
+bar.style.transform = 'scaleX(' + (remaining / BUDGET_MS) + ')';
+requestAnimationFrame(frame);
+}
+
+function burn() {
+spent = true;
+held = false;
+viewer.classList.remove('held');
+sctx.clearRect(0, 0, cv.width, cv.height);
+show('done');
+}
+
+function grab(e) {
+if (spent) return;
+e.preventDefault();
+held = true; last = 0;
+viewer.classList.add('held');
+}
+function release() {
+if (spent || !held) return;
+held = false;
+viewer.classList.remove('held');
+sctx.clearRect(0, 0, cv.width, cv.height);
+}
+
+cv.addEventListener('pointerdown', grab);
+cv.addEventListener('pointerup', release);
+cv.addEventListener('pointercancel', release);
+cv.addEventListener('lostpointercapture', release);
+cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+cv.addEventListener('dragstart', function (e) { e.preventDefault(); });
+document.addEventListener('visibilitychange', function () { if (document.hidden) release(); });
+window.addEventListener('blur', release);
+window.addEventListener('pagehide', release);
+
+document.getElementById('start').addEventListener('click', function () {
+show('viewer');
+sizeScreen();
+requestAnimationFrame(frame);
+});
+
+document.getElementById('close').addEventListener('click', function () {
+window.close();
+setTimeout(function () {
+document.getElementById('close').textContent = 'Tap Done to go back';
+}, 300);
+});
+
+})();
+</script>
+</body>
+</html>
