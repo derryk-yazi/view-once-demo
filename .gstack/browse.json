@@ -1,9 +1,0 @@
-{
-  "pid": 72607,
-  "port": 34567,
-  "token": "6a1623d5-c485-4eef-93bf-ca6198c51cbc",
-  "startedAt": "2026-10-07T12:02:38.609Z",
-  "serverPath": "/Users/derrykfivaz/.claude/skills/gstack/browse/src/server.ts",
-  "mode": "headed",
-  "configHash": "303a7eeccc03078b"
-}
